@@ -119,5 +119,26 @@ module Split
         @data[:already_existed] == true
       end
     end
+
+    # Response wrapper for distribute operations
+    class DistributeResponse
+      attr_reader :data
+
+      def initialize(data)
+        @data = data
+      end
+
+      def success?
+        @data && !@data[:transaction_hash].nil?
+      end
+
+      def transaction_hash
+        @data[:transaction_hash]
+      end
+
+      def distributions
+        @data[:distributions] || []
+      end
+    end
   end
 end
