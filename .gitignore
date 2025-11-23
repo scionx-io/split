@@ -1,0 +1,32 @@
+/eth.rb
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Secrets and keys
+*.key
+*.pem
+*.crt
+*.cert
+config/credentials.yml
+config/credentials.yml.enc
+
+# Gems and packages
+*.gem
+
+# Temporary files
+*.tmp
+*.log
+tmp/
+.DS_Store
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Bundler
+.bundle/
+vendor/

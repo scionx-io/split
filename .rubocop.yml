@@ -1,0 +1,90 @@
+# RuboCop configuration for the Split gem
+
+AllCops:
+  TargetRubyVersion: 3.0
+  NewCops: enable
+  SuggestExtensions: false
+
+Style/StringLiterals:
+  Enabled: true
+  EnforcedStyle: single_quotes
+
+Style/StringLiteralsInInterpolation:
+  Enabled: true
+  EnforcedStyle: single_quotes
+
+Layout/LineLength:
+  Max: 120
+  Exclude:
+    - 'examples/**/*'
+
+Metrics/MethodLength:
+  Max: 30
+  Exclude:
+    - 'lib/split/creation_service.rb'
+
+Metrics/AbcSize:
+  Max: 30
+  Exclude:
+    - 'lib/split/creation_service.rb'
+
+Metrics/ClassLength:
+  Max: 200
+
+Metrics/BlockLength:
+  AllowedMethods: ['describe', 'context']
+  Max: 30
+
+Style/Documentation:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/EachWithObject:
+  Enabled: false
+
+Style/PerlBackrefs:
+  Enabled: false
+
+Style/GuardClause:
+  Enabled: false
+
+Style/ConditionalAssignment:
+  Enabled: false
+
+Style/RedundantReturn:
+  Enabled: true
+  AllowMultipleReturnValues: true
+
+Style/RedundantSelf:
+  Enabled: true
+
+Lint/AssignmentInCondition:
+  Enabled: true
+  AllowSafeAssignment: true
+
+Layout/DotPosition:
+  EnforcedStyle: trailing
+
+Style/MethodDefParentheses:
+  Enabled: true
+
+Style/TrailingCommaInArguments:
+  EnforcedStyleForMultiline: comma
+
+Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: comma
+
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyleForMultiline: comma
+
+# Security cops
+Security/YAMLLoad:
+  Enabled: true
+
+Security/Eval:
+  Enabled: true
+
+Security/JSONLoad:
+  Enabled: true
