@@ -3,6 +3,7 @@
 module Split
   class DistributionService
     def distribute(split_contract, token_address, config_module = Split::Configuration)
+      @config_module = config_module
       chain_id = split_contract.chain.id
       contract_address = split_contract.contract_address
 
@@ -36,7 +37,8 @@ module Split
     private
 
     def build_client(chain_id)
-      Eth::Client.create(BlockchainHelper.rpc_url(chain_id)).tap do |c|
+      rpc_url = @config_module.rpc_url(chain_id)
+      Eth::Client.create(rpc_url).tap do |c|
         c.max_priority_fee_per_gas = 30 * Eth::Unit::GWEI
         c.max_fee_per_gas = 50 * Eth::Unit::GWEI
       end
