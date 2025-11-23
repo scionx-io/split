@@ -76,6 +76,36 @@ module Split
         Response.new(result)
       end
 
+      def distribute(contract_address:, chain_id:, token_address:)
+        # Fetch split data from GraphQL API
+        split_data = Split::GraphqlClient.fetch_split_data(contract_address, chain_id)
+
+        unless split_data
+          raise ArgumentError, "Could not fetch split data for #{contract_address} on chain #{chain_id}"
+        end
+
+        # Build split contract data object
+        split_contract = Split::SplitContractData.new(
+          chain_id: chain_id,
+          contract_address: contract_address,
+          recipients: split_data[:recipients],
+          allocations: split_data[:allocations],
+          distribution_incentive: split_data[:distribution_incentive]
+        )
+
+        # Build config module from client
+        config_module = build_config_module
+
+        # Execute distribution
+        result = Split::DistributionService.new.distribute(
+          split_contract,
+          token_address,
+          config_module
+        )
+
+        DistributeResponse.new(result)
+      end
+
       private
 
       def build_config_module
