@@ -109,7 +109,7 @@ module Split
         paymaster_api_key: @paymaster[:api_key],
         chain_id: @chain_id,
         rpc_url: @config_module.rpc_url(@chain_id),
-        sponsorship_policy_id: @config_module.sponsorship_policy_id
+        sponsorship_policy_id: @config_module.sponsorship_policy_id,
       )
 
       # Deploy the contract via sponsored UserOperation
@@ -122,7 +122,7 @@ module Split
           split_address: split_addr,
           block_number: result.dig(:receipt, 'receipt', 'blockNumber'),
           already_existed: false,
-          sponsored: true
+          sponsored: true,
         }
       else
         raise "Sponsored deployment failed: #{result[:error]}"
@@ -143,7 +143,7 @@ module Split
 
       encoded_params = Eth::Abi.encode(
         ['(address[],uint256[],uint256,uint16)', 'address', 'address', 'bytes32'],
-        [split_params, owner, creator, hex_to_bytes32(salt)]
+        [split_params, owner, creator, hex_to_bytes32(salt)],
       )
 
       inner_call = function_selector + encoded_params
@@ -153,11 +153,11 @@ module Split
       execute_selector = Eth::Util.keccak256(execute_signature)[0...4]
 
       execute_encoded = Eth::Abi.encode(
-        ['address', 'uint256', 'bytes'],
-        [factory_address, 0, inner_call]
+        %w[address uint256 bytes],
+        [factory_address, 0, inner_call],
       )
 
-      '0x' + (execute_selector + execute_encoded).unpack1('H*')
+      "0x#{(execute_selector + execute_encoded).unpack1('H*')}"
     end
 
     def hex_to_bytes32(hex_str)

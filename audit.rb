@@ -19,7 +19,8 @@ security_issues = []
 
 Dir.glob('**/*.rb') do |file|
   next if file.start_with?('vendor/', 'tmp/', '.git/')
-  
+  next if File.directory?(file)
+
   content = File.read(file)
   
   # Check for potential security issues in the codebase
@@ -35,9 +36,9 @@ Dir.glob('**/*.rb') do |file|
 end
 
 if security_issues.empty?
-  puts "✅ No major security issues detected."
+  puts '✅ No major security issues detected.'
 else
-  puts "⚠️  Security issues found:"
+  puts '⚠️  Security issues found:'
   security_issues.each { |issue| puts "   #{issue}" }
 end
 

@@ -10,7 +10,7 @@ begin
 rescue LoadError
   # RuboCop not available, define a simple task
   task :audit do
-    puts "RuboCop not installed. Run `bundle install` to install development dependencies."
+    puts 'RuboCop not installed. Run `bundle install` to install development dependencies.'
   end
 end
 

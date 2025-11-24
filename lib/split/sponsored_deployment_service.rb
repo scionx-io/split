@@ -38,20 +38,26 @@ module Split
       # 4. Get gas prices
       gas_price_result = @pimlico.pimlico_get_user_operation_gas_price
       puts "[DEBUG] Step 4 - Gas price result: #{gas_price_result.inspect}"
-      return { success: false, error: "Gas price fetch failed: #{gas_price_result[:error]}" } unless gas_price_result[:success]
+      unless gas_price_result[:success]
+        return { success: false,
+                 error: "Gas price fetch failed: #{gas_price_result[:error]}" }
+      end
 
       gas_prices = gas_price_result[:data]
       user_op = update_gas_prices(user_op, gas_prices)
-      puts "[DEBUG] Step 4 - Gas prices applied"
+      puts '[DEBUG] Step 4 - Gas prices applied'
 
       # 5. Estimate gas (EIP-7702 requires EntryPoint v0.8)
       puts "[DEBUG] Step 5 - Estimating gas with UserOp: #{user_op.inspect}"
       gas_estimate_result = @pimlico.eth_estimate_user_operation_gas(
         user_op,
-        Pimlico::Constants::ENTRY_POINT_V08
+        Pimlico::Constants::ENTRY_POINT_V08,
       )
       puts "[DEBUG] Step 5 - Gas estimate result: #{gas_estimate_result.inspect}"
-      return { success: false, error: "Gas estimation failed: #{gas_estimate_result[:error]}" } unless gas_estimate_result[:success]
+      unless gas_estimate_result[:success]
+        return { success: false,
+                 error: "Gas estimation failed: #{gas_estimate_result[:error]}" }
+      end
 
       merge_api_response(user_op, gas_estimate_result[:data])
 
@@ -63,7 +69,7 @@ module Split
         validation_result = @pimlico.pm_validate_sponsorship_policies(
           user_op,
           Pimlico::Constants::ENTRY_POINT_V08,
-          [@sponsorship_policy_id]
+          [@sponsorship_policy_id],
         )
         puts "[DEBUG] Step 6a - Policy validation result: #{validation_result.inspect}"
       end
@@ -72,7 +78,7 @@ module Split
       paymaster_result = @pimlico.pm_sponsor_user_operation(
         user_op,
         Pimlico::Constants::ENTRY_POINT_V08,
-        sponsorship_policy_id: @sponsorship_policy_id
+        sponsorship_policy_id: @sponsorship_policy_id,
       )
       return { success: false, error: paymaster_result[:error] } unless paymaster_result[:success]
 
@@ -86,7 +92,7 @@ module Split
       # 8. Submit to bundler (eip7702Auth stays inside user_op)
       submit_result = @pimlico.eth_send_user_operation(
         user_op,
-        Pimlico::Constants::ENTRY_POINT_V08
+        Pimlico::Constants::ENTRY_POINT_V08,
       )
       return { success: false, error: submit_result[:error] } unless submit_result[:success]
 
@@ -124,9 +130,9 @@ module Split
       function_selector = Eth::Util.keccak256(function_signature)[0...4]
 
       # Encode parameters: address (32 bytes) + uint192 key (32 bytes, key=0)
-      encoded_params = Eth::Abi.encode(['address', 'uint192'], [@operator_address, 0])
+      encoded_params = Eth::Abi.encode(%w[address uint192], [@operator_address, 0])
 
-      call_data = '0x' + (function_selector + encoded_params).unpack1('H*')
+      call_data = "0x#{(function_selector + encoded_params).unpack1('H*')}"
 
       result = @eth_client.eth_call({ to: entry_point, data: call_data })
       result['result'].to_i(16)

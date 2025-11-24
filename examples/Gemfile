@@ -1,7 +1,7 @@
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
-gem 'split-contracts', path: '..'  # For local development
-# gem 'split-contracts', '~> 0.0.1'  # For production use
+gem 'split-rb', path: '..'  # For local development
+# gem 'split-rb', '~> 0.0.1'  # For production use
 
 gem 'dotenv'
-gem "eth"
+gem 'eth'

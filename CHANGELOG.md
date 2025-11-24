@@ -6,5 +6,6 @@
 - Configuration example updated to include Polygon RPC URL support
 
 ### Changed
+- Renamed gem from 'split-contracts' to 'split-rb'
 - Updated example to work with Polygon mainnet instead of Sepolia
 - Improved gas fee handling for EVM-compatible chains

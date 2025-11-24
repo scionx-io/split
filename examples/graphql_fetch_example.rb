@@ -5,10 +5,10 @@
 require 'split'
 require 'dotenv/load'
 
-split_address = "0xYourSplitContractAddress"
+split_address = '0xYourSplitContractAddress'
 chain_id = 1  # Ethereum mainnet
 
-puts "Fetching split data from 0xSplits API..."
+puts 'Fetching split data from 0xSplits API...'
 
 begin
   # Fetch split data (API key can be provided as parameter or set as SPLIT_API_KEY environment variable)
@@ -19,12 +19,12 @@ begin
   )
 
   if split_data
-    puts "Split data retrieved successfully!"
+    puts 'Split data retrieved successfully!'
     puts "Recipients: #{split_data[:recipients]}"
     puts "Allocations: #{split_data[:allocations]}"
     puts "Distribution Incentive: #{split_data[:distribution_incentive]}"
   else
-    puts "No split data found or API request failed"
+    puts 'No split data found or API request failed'
   end
 rescue => e
   puts "Error fetching split data: #{e.message}"

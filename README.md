@@ -1,13 +1,13 @@
-# Split::Contracts
+# Split::Rb
 
-The `split-contracts` gem provides a Ruby interface for interacting with the 0xSplits V2 protocol contracts. It enables creating, managing, and distributing funds through split contracts on various EVM-compatible blockchains.
+The `split-rb` gem provides a Ruby interface for interacting with the 0xSplits V2 protocol contracts. It enables creating, managing, and distributing funds through split contracts on various EVM-compatible blockchains.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'split-contracts'
+gem 'split-rb'
 ```
 
 And then execute:
@@ -17,7 +17,7 @@ bundle install
 
 Or install it yourself as:
 ```bash
-gem install split-contracts
+gem install split-rb
 ```
 
 ## Configuration

@@ -14,7 +14,7 @@ module Split
     end
 
     def splits
-      @splits_accessor ||= SplitsAccessor.new(self, @paymaster)
+      @splits ||= SplitsAccessor.new(self, @paymaster)
     end
 
     # Check if paymaster is configured
@@ -60,7 +60,7 @@ module Split
         config = {
           recipients: recipients,
           salt: salt,
-          distributor_fee_percent: distributor_fee_percent
+          distributor_fee_percent: distributor_fee_percent,
         }
 
         # Build a config module that reads from client instance
@@ -70,7 +70,7 @@ module Split
           chain_id: chain_id,
           config: config,
           config_module: config_module,
-          paymaster: @paymaster
+          paymaster: @paymaster,
         )
 
         Response.new(result)
@@ -80,9 +80,7 @@ module Split
         # Fetch split data from GraphQL API
         split_data = Split::GraphqlClient.fetch_split_data(contract_address, chain_id)
 
-        unless split_data
-          raise ArgumentError, "Could not fetch split data for #{contract_address} on chain #{chain_id}"
-        end
+        raise ArgumentError, "Could not fetch split data for #{contract_address} on chain #{chain_id}" unless split_data
 
         # Build split contract data object
         split_contract = Split::SplitContractData.new(
@@ -90,17 +88,17 @@ module Split
           contract_address: contract_address,
           recipients: split_data[:recipients],
           allocations: split_data[:allocations],
-          distribution_incentive: split_data[:distribution_incentive]
+          distribution_incentive: split_data[:distribution_incentive],
         )
 
         # Build config module from client
         config_module = build_config_module
 
-        # Execute distribution
-        result = Split::DistributionService.new.distribute(
+        # Execute distribution (with paymaster if configured)
+        result = Split::DistributionService.new(@paymaster).distribute(
           split_contract,
           token_address,
-          config_module
+          config_module,
         )
 
         DistributeResponse.new(result)
@@ -110,14 +108,13 @@ module Split
 
       def build_config_module
         client = @client
-        paymaster = @paymaster  # Capture the paymaster from the accessor
-        config_module = Class.new do
+        paymaster = @paymaster # Capture the paymaster from the accessor
+        Class.new do
           define_singleton_method(:rpc_url) { |cid| client.send(:rpc_url, cid) }
           define_singleton_method(:operator_address) { client.operator_address }
           define_singleton_method(:operator_key) { client.operator_key }
           define_singleton_method(:sponsorship_policy_id) { paymaster&.dig(:sponsorship_policy_id) }
         end
-        config_module
       end
     end
 

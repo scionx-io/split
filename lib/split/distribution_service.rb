@@ -2,22 +2,40 @@
 
 module Split
   class DistributionService
+    def initialize(paymaster = nil)
+      @paymaster = paymaster
+    end
+
     def distribute(split_contract, token_address, config_module = Split::Configuration)
       @config_module = config_module
       chain_id = split_contract.chain.id
       contract_address = split_contract.contract_address
 
+      split_data = build_split_data_from_contract(split_contract)
+
+      if @paymaster && @paymaster[:api_key]
+        distribute_sponsored(chain_id, contract_address, split_data, token_address)
+      else
+        distribute_regular(chain_id, contract_address, split_data, token_address)
+      end
+    end
+
+    private
+
+    def distribute_regular(chain_id, contract_address, split_data, token_address)
       client = build_client(chain_id)
       contract = build_contract(contract_address)
-      split_data = build_split_data_from_contract(split_contract)
+
+      operator_key = @config_module.operator_key
+      operator_key = Eth::Key.new(priv: operator_key) if operator_key.is_a?(String)
 
       tx_hash, success = client.transact_and_wait(
         contract,
         'distribute',
         split_data,
         token_address,
-        config_module.operator_address,
-        sender_key: config_module.operator_key,
+        @config_module.operator_address,
+        sender_key: operator_key,
         gas_limit: 200_000,
         tx_value: 0,
       )
@@ -34,7 +52,63 @@ module Split
       { transaction_hash: tx_hash, distributions: distributions }
     end
 
-    private
+    def distribute_sponsored(chain_id, contract_address, split_data, token_address)
+      # Encode the distribute call wrapped in SimpleSmartAccount.execute()
+      call_data = encode_distribute_call(contract_address, split_data, token_address)
+
+      # Initialize the sponsored deployment service
+      sponsor_service = SponsoredDeploymentService.new(
+        operator_key: @config_module.operator_key,
+        paymaster_api_key: @paymaster[:api_key],
+        chain_id: chain_id,
+        rpc_url: @config_module.rpc_url(chain_id),
+        sponsorship_policy_id: @config_module.sponsorship_policy_id,
+      )
+
+      # Execute the distribution via sponsored UserOperation
+      result = sponsor_service.deploy(call_data: call_data)
+
+      if result[:success]
+        # Decode transfer events from successful transaction
+        client = build_client(chain_id)
+        distributions = TransferEventDecoder.new(client).decode_transfer_events(result[:tx_hash], token_address)
+        puts "Sponsored distribution successful: #{result[:tx_hash]}" if defined?(puts)
+
+        {
+          transaction_hash: result[:tx_hash],
+          user_op_hash: result[:user_op_hash],
+          distributions: distributions,
+          sponsored: true,
+        }
+      else
+        raise "Sponsored distribution failed: #{result[:error]}"
+      end
+    end
+
+    def encode_distribute_call(contract_address, split_data, token_address)
+      # Encode distribute((address[],uint256[],uint256,uint16),address,address)
+      # split_data = [recipients[], allocations[], totalAllocation, distributionIncentive]
+      function_signature = 'distribute((address[],uint256[],uint256,uint16),address,address)'
+      function_selector = Eth::Util.keccak256(function_signature)[0...4]
+
+      encoded_params = Eth::Abi.encode(
+        ['(address[],uint256[],uint256,uint16)', 'address', 'address'],
+        [split_data, token_address, @config_module.operator_address],
+      )
+
+      inner_call = function_selector + encoded_params
+
+      # Wrap in SimpleSmartAccount.execute(address to, uint256 value, bytes calldata data)
+      execute_signature = 'execute(address,uint256,bytes)'
+      execute_selector = Eth::Util.keccak256(execute_signature)[0...4]
+
+      execute_encoded = Eth::Abi.encode(
+        %w[address uint256 bytes],
+        [contract_address, 0, inner_call],
+      )
+
+      "0x#{(execute_selector + execute_encoded).unpack1('H*')}"
+    end
 
     def build_client(chain_id)
       rpc_url = @config_module.rpc_url(chain_id)

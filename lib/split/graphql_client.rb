@@ -5,51 +5,33 @@ require 'graphql/client/http'
 
 module Split
   class GraphqlClient
-    def self.build_client(api_key = nil)
-      api_key ||= ENV.fetch('SPLIT_API_KEY', nil)
-
-      # Create a HTTP adapter that adds authorization header
-      http = GraphQL::Client::HTTP.new('https://api.splits.org/graphql')
-
-      # Create wrapper to add header
-      wrapper = Object.new
-      def wrapper.setup(http_obj, auth_key)
-        @http = http_obj
-        @api_key = auth_key
-        self
-      end
-      wrapper.setup(http, api_key)
-
-      class << wrapper
-        def headers(context)
-          result = @http.headers(context) || {}
-          if @api_key
-            result['Authorization'] = "Bearer #{@api_key}"
-          end
-          result
-        end
-
-        def execute(query, context = nil)
-          # The GraphQL client may call with different signatures during schema loading
-          if context
-            @http.execute(query, context)
-          else
-            @http.execute(query)
-          end
-        end
-
-        def schema_id
-          @http.schema_id
-        end
-      end
-
-      schema = GraphQL::Client.load_schema(wrapper)
-      GraphQL::Client.new(schema: schema, execute: wrapper)
+    class << self
+      attr_accessor :api_key
     end
 
-    def self.fetch_split_data(contract_address, chain_id, api_key = nil)
-      client = build_client(api_key)
-      account_query = client.parse <<~GRAPHQL
+    # Lazy-loaded HTTP adapter that uses the api_key at request time
+    class SplitsHTTP < GraphQL::Client::HTTP
+      def initialize
+        super('https://api.splits.org/graphql')
+      end
+
+      def headers(_context)
+        { 'Authorization' => "Bearer #{Split::GraphqlClient.api_key}" }
+      end
+    end
+
+    HTTP = SplitsHTTP.new
+
+    def self.ensure_initialized!
+      return if @initialized
+
+      raise 'Split::GraphqlClient.api_key must be set before use' if api_key.nil?
+
+      @schema = GraphQL::Client.load_schema(HTTP)
+      @client = GraphQL::Client.new(schema: @schema, execute: HTTP)
+
+      # Parse query and assign to constant (required by graphql-client)
+      const_set(:AccountQuery, @client.parse(<<~GRAPHQL))
         query($accountId: ID!, $chainId: String!) {
           account(id: $accountId, chainId: $chainId) {
             __typename
@@ -65,7 +47,18 @@ module Split
         }
       GRAPHQL
 
-      response = client.query(account_query, variables: {
+      @initialized = true
+    end
+
+    def self.client
+      ensure_initialized!
+      @client
+    end
+
+    def self.fetch_split_data(contract_address, chain_id)
+      ensure_initialized!
+
+      response = client.query(AccountQuery, variables: {
                                 accountId: contract_address.downcase,
                                 chainId: chain_id.to_s,
                               })

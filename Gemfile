@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
 # Load the gem specification
 gemspec
@@ -10,4 +10,5 @@ group :development, :test do
   gem 'rubocop', '~> 1.0'
   gem 'rubocop-performance', '~> 1.0'
   gem 'rubocop-rake', '~> 0.6'
+  gem 'bundler-audit', '~> 0.9'
 end
