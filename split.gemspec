@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.name = 'split-rb'
   spec.version = Split::VERSION
   spec.authors = ['ScionX']
-  spec.email = ['contact@scionx.com']
+  spec.email = ['wecare@scionx.io']
 
   spec.summary = 'A Ruby gem for interacting with 0xSplits V2 protocol contracts'
   spec.description = 'This gem provides functionality to create, manage, and interact with 0xSplits V2 protocol contracts for automated revenue distribution.'
