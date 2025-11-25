@@ -5,7 +5,7 @@ require_relative 'lib/split/version'
 Gem::Specification.new do |spec|
   spec.name = 'split-rb'
   spec.version = Split::VERSION
-  spec.authors = ['ScionX']
+  spec.authors = ['Bolo Michelin']
   spec.email = ['wecare@scionx.io']
 
   spec.summary = 'A Ruby gem for interacting with 0xSplits V2 protocol contracts'
@@ -30,7 +30,7 @@ Gem::Specification.new do |spec|
   # Runtime dependencies
   spec.add_runtime_dependency 'eth', '~> 0.5'
   spec.add_runtime_dependency 'graphql-client', '~> 0.18'
-  spec.add_runtime_dependency 'pimlico', '~> 0.1'
+  spec.add_runtime_dependency 'pimlico', '>= 0.0.1'
 
   # Development dependencies
   spec.add_development_dependency 'bundler', '~> 2.0'
