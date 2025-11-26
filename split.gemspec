@@ -3,7 +3,7 @@
 require_relative 'lib/split/version'
 
 Gem::Specification.new do |spec|
-  spec.name = 'split-rb'
+  spec.name = 'split'
   spec.version = Split::VERSION
   spec.authors = ['Bolo Michelin']
   spec.email = ['wecare@scionx.io']
